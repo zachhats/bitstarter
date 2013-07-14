@@ -26,6 +26,7 @@ var program = require('commander');
 var cheerio = require('cheerio');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var URL_DEFAULT = "http://nameless-tor-1585.herokuapp.com/";
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -34,6 +35,11 @@ var assertFileExists = function(infile) {
         process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
     }
     return instr;
+};
+
+var getUrl = function(url) {
+    var rest = require('restler');
+    return rest.get(url);
 };
 
 var cheerioHtmlFile = function(htmlfile) {
@@ -65,8 +71,17 @@ if(require.main == module) {
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <html_file>', 'Path to url', getUrl, URL_DEFAULT)
         .parse(process.argv);
-    var checkJson = checkHtmlFile(program.file, program.checks);
+    if (program.file)
+        var checkJson = checkHtmlFile(program.file, program.checks);
+    else if (program.url)
+        var checkJson = checkHtmlFile(program.url, program.checks);
+    else
+    {
+        console.log("You must provide either a file or a url");
+        process.exit(1); // http://nodejs.org/api/process.html#process_process_exit_code
+    }
     var outJson = JSON.stringify(checkJson, null, 4);
     console.log(outJson);
 } else {
